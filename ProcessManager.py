@@ -29,11 +29,10 @@ class ProcessManager:
         # Этот метод проверят - была ли изменена конфигурация процесса (модуль либо кинфгурационный файл)
         last_process_update = dt.strptime(self.processes[process_id]['last_update'],'%Y-%m-%d %H-%M-%S').timestamp()
         last_conf_update = os.path.getmtime(self.config_dir + '/' + self.processes[process_id]['name']+'.json')
-        #last_conf_update = os.path.getmtime(os.path.join(self.config_dir,self.processes[process_id]['name'])) 
         last_module_update = os.path.getmtime((self.modules_dir + '/' + self.processes[process_id]['name'] +'.py'))
 
         if (last_process_update < last_conf_update) | (last_process_update < last_module_update):
-            self.update_config_by_id(self.processes[process_id])
+            self.update_config_by_id(process_id)
 
     def import_module(self, name):
         # Этот метод импортирует модуль по имени из папки modules
@@ -59,21 +58,22 @@ class ProcessManager:
 
     def update_config_by_id(self, process_id):
         # Этот метод обновляет конфигурацию процесса по его id
-        file_path = os.path.join(self.processes_dir, self.processes[process_id]['name'])
+        #file_path = os.path.join(self.config_dir[process_id], self.processes[process_id]['name'])
+        file_path = self.config_dir + '/' + self.processes[process_id]['name'] +'.json'
         with open(file_path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
                 data['last_update'] = dt.strftime(dt.now(), '%Y-%m-%d %H-%M-%S')
                 self.processes[data['process_id']] = data
                 self.import_module(data['name'])
-                print(data)
                 with open(file_path, 'w', encoding='utf-8') as file:
                     json.dump(data, file)
 
                 exec(f"self.processes[{process_id}]['module'] = {self.processes[process_id]['name']}.main()")
+
+
     def update_config_list(self):
         # Этот метод обновляет список процессов в соотвествии с папкой ./config
         folder_path = self.config_dir
-
         for filename in os.listdir(folder_path):
             if filename.endswith('.json'):
                 file_path = os.path.join(folder_path, filename)
@@ -90,7 +90,7 @@ class ProcessManager:
                     
         
     def check_processes(self):
-        # Этот метод проверяет 
+        # Устаревший процесс на удаление
         dir_amount = len([f for f in os.listdir(self.processes_dir)])
         if self.processes_amount != dir_amount:
             self.update_processes_list()
